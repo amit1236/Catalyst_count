@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Query Builder{% endblock %}
+
+{% block content %}
+<div class="query-container">
+    <h2>Filter Company Records</h2>
+    
+    <form method="get">
+        <div class="row">
+            <!-- Industry Dropdown -->
+            <div class="form-group col-md-6">
+                <label for="industry">Industry</label>
+                <select name="industry" id="industry" class="form-control">
+                    <option value="">Select Industry</option>
+                    {% for industry in industries %}
+                        <option value="{{ industry }}" {% if request.GET.industry == industry %}selected{% endif %}>{{ industry }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+    
+            <!-- Employees From Dropdown -->
+            <div class="form-group col-md-6">
+                <label for="employees_from">Employees</label>
+                <select name="employees_from" id="employees_from" class="form-control">
+                    <option value="">Select Min Employees</option>
+                    {% for range in employee_counts %}
+                        <option value="{{ range.from }}" {% if request.GET.employees_from == range.from|stringformat:"s" %}selected{% endif %}>
+                            {{ range.from }} - {% if range.to %}{{ range.to }}{% else %}Above{% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+    
+    
+            <!-- State Dropdown -->
+            <div class="form-group col-md-6">
+                <label for="state">State</label>
+                <select name="state" id="state" class="form-control">
+                    <option value="">Select State</option>
+                    {% for state in states %}
+                        <option value="{{ state }}" {% if request.GET.state == state %}selected{% endif %}>{{ state }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+    
+            <!-- Country Dropdown -->
+            <div class="form-group col-md-6">
+                <label for="country">Country</label>
+                <select name="country" id="country" class="form-control">
+                    <option value="">Select Country</option>
+                    {% for country in countries %}
+                        <option value="{{ country }}" {% if request.GET.country == country %}selected{% endif %}>{{ country }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+    
+            <!-- Year Founded Dropdown -->
+            <div class="form-group col-md-6">
+                <label for="year_founded">Year Founded</label>
+                <select name="year_founded" id="year_founded" class="form-control">
+                    <option value="">Select Year</option>
+                    {% for year in years_founded %}
+                        <option value="{{ year }}" {% if request.GET.year_founded == year %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+    
+            <div class="col-md-12 mt-3">
+                <button type="submit" class="btn btn-info">Query Data</button>
+                <button type="reset" class="btn btn-secondary">Reset</button>
+            </div>
+        </div>
+    </form>
+    
+    
+
+    {% if results is not None %}
+        <div class="result-box mt-3">
+            <h3>Number of Matching Records: <strong>{{ results }}</strong></h3>
+        </div>
+    {% endif %}
+</div>
+<script>
+    document.getElementById('reset-button').addEventListener('click', function() {
+        // Redirect to the current page without any query parameters
+        window.location.href = window.location.pathname;
+    });
+</script>
+{% endblock %}

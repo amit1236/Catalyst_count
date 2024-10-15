@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Data{% endblock %}
+
+{% block content %}
+<div class="upload-page" style="background-color: #f0f8ff; height: 100vh; display: flex; justify-content: center; align-items: center;">
+    <div class="upload-container container">
+        <!-- Wider form with white background and no padding -->
+        <div class="card shadow-lg" style="background-color: #ffffff; border-radius: 15px; width: 900px; max-width: 100%;">
+            <div class="card-body">
+                <h2 class="text-center mb-5" style="color: #333; font-size: 28px;">Upload Company Data (CSV)</h2>
+                
+                <form id="file-upload-form" method="post" enctype="multipart/form-data" class="mb-5">
+                    {% csrf_token %}
+                    <div class="form-group mb-4">
+                        <label for="file-input" class="form-label" style="font-weight: bold; color: #333;">Select a CSV File</label>
+                        <div class="custom-file-input-wrapper">
+                            <label for="file-input" class="custom-file-label">
+                                <i class="fas fa-upload"></i> Choose File
+                            </label>
+                            <input id="file-input" type="file" name="file" class="custom-file-input" style="display: none;">
+                            <span id="file-name" class="file-name">No file chosen</span>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-dark-blue custom-upload-btn">Start Upload</button>
+                    </div>
+                </form>
+                
+                <!-- Progress bar section -->
+                <div class="progress mt-5" style="height: 35px; display: none;">
+                    <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                         style="width: 0%; font-size: 16px; line-height: 35px; background-color: #1e3a60;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* General Styling */
+.upload-page {
+    background-color: #edf6ff;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.card {
+    background-color: #ffffff; /* White background for the form */
+    border-radius: 15px;
+    width: 900px;
+    max-width: 100%;
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Button Styling */
+.custom-upload-btn {
+    background-color: #1e3a60; /* Dark blue button */
+    border-color: #1e3a60;
+    padding: 15px 80px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.custom-upload-btn:hover {
+    background-color: #162c4a;
+    border-color: #162c4a;
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+/* Custom file input styling */
+.custom-file-input-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.custom-file-label {
+    display: inline-block;
+    padding: 12px 20px;
+    background-color: #1e3a60; /* Dark blue */
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.custom-file-label:hover {
+    background-color: #162c4a;
+    transform: translateY(-2px);
+}
+
+.file-name {
+    margin-left: 15px;
+    font-size: 16px;
+    color: #555;
+    display: inline-block;
+}
+
+/* File Input Icon */
+.custom-file-label i {
+    margin-right: 8px;
+}
+
+/* Progress Bar Styling */
+.progress-bar {
+    font-size: 16px;
+    line-height: 35px;
+    background-color: #1e3a60; /* Dark blue progress bar */
+}
+</style>
+
+<script>
+    // File input handling
+    const fileInput = document.getElementById('file-input');
+    const fileNameDisplay = document.getElementById('file-name');
+
+    fileInput.addEventListener('change', function() {
+        if (fileInput.files.length > 0) {
+            fileNameDisplay.textContent = fileInput.files[0].name;
+        } else {
+            fileNameDisplay.textContent = "No file chosen";
+        }
+    });
+
+    const form = document.getElementById('file-upload-form');
+    const progressBar = document.getElementById('progress-bar');
+    const progressContainer = document.querySelector('.progress');
+    let cacheKey = null;
+
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const formData = new FormData(form);
+        const xhr = new XMLHttpRequest();
+
+        xhr.open('POST', form.action, true);
+
+        // Show progress bar when upload begins
+        xhr.upload.addEventListener('loadstart', function() {
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+        });
+
+        // Update progress bar for file upload
+        xhr.upload.addEventListener('progress', function(event) {
+            if (event.lengthComputable) {
+                const percentComplete = (event.loaded / event.total) * 100;
+                progressBar.style.width = percentComplete + '%';
+                progressBar.innerHTML = Math.round(percentComplete) + '%';
+            }
+        });
+
+        // Handle when the upload finishes
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    cacheKey = JSON.parse(xhr.responseText).cache_key;
+                    trackInsertionProgress();
+                } else {
+                    console.error("File upload failed.");
+                }
+            }
+        };
+
+        // Send the file
+        xhr.send(formData);
+    });
+
+    function trackInsertionProgress() {
+        const progressInterval = setInterval(function() {
+            if (cacheKey) {
+                fetch(`/company/check_insertion_progress/${cacheKey}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const percentComplete = data.progress;
+                        if (percentComplete >= 0) {
+                            progressBar.style.width = percentComplete + '%';
+                            progressBar.innerHTML = Math.round(percentComplete) + '%';
+                        }
+                        if (percentComplete === 100 || percentComplete === -1) {
+                            clearInterval(progressInterval);
+                            if (percentComplete === 100) {
+                                window.location.href = "{% url 'query_builder' %}";
+                            } else {
+                                console.error("Database insertion failed.");
+                            }
+                        }
+                    });
+            }
+        }, 1000);
+    }
+</script>
+
+{% endblock %}

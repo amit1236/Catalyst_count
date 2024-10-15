@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}User Management{% endblock %}
+
+{% block content %}
+<div class="user-management-page" style="background-color: #f0f8ff; min-height: 100vh; padding: 40px 0;">
+    <div class="container" style="max-width: 800px; margin: 0 auto;">
+        <div class="card shadow-lg" style="background-color: #eaf4fc; border-radius: 15px; padding: 40px; box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);">
+            <h2 class="text-center" style="color: #333; font-size: 28px; font-weight: bold; margin-bottom: 30px;">User Management</h2>
+
+            <!-- Form to Add a New User -->
+            <form method="post" style="margin-bottom: 40px;">
+                {% csrf_token %}
+                <div class="form-group mb-4">
+                    <input type="text" name="username" class="form-control" placeholder="Username" required 
+                           style="padding: 15px; font-size: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #a3d5f7;">
+                </div>
+                <div class="form-group mb-4">
+                    <input type="email" name="email" class="form-control" placeholder="Email" required 
+                           style="padding: 15px; font-size: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #a3d5f7;">
+                </div>
+                <div class="form-group mb-4">
+                    <input type="password" name="password" class="form-control" placeholder="Password" required 
+                           style="padding: 15px; font-size: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #a3d5f7;">
+                </div>
+                <div class="text-center">
+                    <button type="submit" name="add_user" class="btn custom-btn" 
+                            style="background-color: #a3d5f7; border-color: #a3d5f7; padding: 12px 40px; font-size: 18px; font-weight: bold; color: #fff; border-radius: 8px; transition: background-color 0.3s ease;">Add User</button>
+                </div>
+            </form>
+
+            <!-- Existing Users List -->
+            <h3 style="color: #333; font-size: 22px; margin-bottom: 20px;">Existing Users</h3>
+            <ul class="list-group">
+                {% for user in users %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center" style="padding: 15px 20px; border-radius: 8px; margin-bottom: 10px; background-color: #fff;">
+                        <span class="user-details" style="display: flex; width: 100%; justify-content: space-between;">
+                            <strong style="color: #333;">{{ user.username }}</strong>
+                            <span style="color: #555;">{{ user.email }}</span>
+                        </span>
+                        <form method="post" style="margin-left: 20px;">
+                            {% csrf_token %}
+                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                            <button type="submit" name="delete_user" class="btn btn-danger" 
+                                    style="background-color: #f76c6c; border-color: #f76c6c; color: #fff; padding: 6px 15px; font-size: 14px; border-radius: 5px;">Delete</button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+/* General Styling */
+.user-management-page {
+    background-color: #f0f8ff;
+    padding-top: 40px;
+    padding-bottom: 40px;
+}
+
+.card {
+    background-color: #eaf4fc;
+    border-radius: 15px;
+    padding: 40px;
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom Button */
+.custom-btn:hover {
+    background-color: #72bbe8;
+    border-color: #72bbe8;
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.list-group-item {
+    background-color: #fff;
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+}
+
+/* Delete Button */
+.btn-danger:hover {
+    background-color: #f44336;
+    border-color: #f44336;
+}
+
+/* User Details Styling */
+.user-details {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+</style>
+
+{% endblock %}
